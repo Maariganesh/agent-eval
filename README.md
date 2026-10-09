@@ -243,18 +243,20 @@ If the pull request regresses test pass rates or bloats token cost without quali
 
 ## Project Structure
 
+```text
+agent-eval/
 ├── README.md                      # Complete system documentation (Deliverable 1)
 ├── AGENTS.md                      # Harness instructions used to build the tool (Deliverable 5)
 ├── docs/                          # Core assignment documentation
 │   ├── ONE_PAGE_REFLECTION.md     # Deliverable 4: Hard limit 1-page design & reflection
-│   ├── PROCESS.md                 # Deliverable 5: Process transcript, audit log, error resolutions
+│   └── PROCESS.md                 # Deliverable 5: Process transcript, audit log, error resolutions
 ├── reports/                       # Generated evaluation reports
 │   ├── eval_report_positive.html  # Interactive HTML Dashboard (Positive case)
 │   ├── eval_report_negative.html  # Interactive HTML Dashboard (Negative case)
 │   ├── eval_report_positive.md    # Markdown Summary (Positive case)
-│   ├── eval_report_negative.md    # Markdown Summary (Negative case)
+│   └── eval_report_negative.md    # Markdown Summary (Negative case)
 ├── .agents/skills/
-│   ├── harness-evaluation/        # Skill definition for agent evaluation
+│   └── harness-evaluation/        # Skill definition for agent evaluation
 │       └── SKILL.md
 ├── evaluate.py                    # Root convenience launcher
 ├── run_demo.py                    # Multi-scenario demo script
@@ -269,26 +271,26 @@ If the pull request regresses test pass rates or bloats token cost without quali
 │   │   ├── functional.py          # Isolated pytest sandbox execution
 │   │   ├── convention.py          # AST typing, error handling, and security auditing
 │   │   ├── fulfillment.py         # Business spec rubric engine
-│   │   ├── cost.py                # Token counter & model cost calculation
-│   ├── reporting/
-│       └── console.py             # Rich terminal report renderer
-│       └── html.py                # Interactive dark-mode HTML dashboard generator
+│   │   └── cost.py                # Token counter & model cost calculation
+│   └── reporting/
+│       ├── console.py             # Rich terminal report renderer
+│       ├── html.py                # Interactive dark-mode HTML dashboard generator
 │       └── markdown.py            # GitHub PR Markdown export generator
 ├── harnesses/                     # Real harnesses for evaluation
 │   ├── baseline/                  # Control harness (minimal prompt)
 │   ├── candidate_v2/              # Improved harness (rules, typing, skills)
-│   ├── candidate_regressive/      # Regressive harness (prompt bloat, anti-patterns)
+│   └── candidate_regressive/      # Regressive harness (prompt bloat, anti-patterns)
 ├── benchmarks/                    # Benchmark tasks
-│   ├── tasks.yaml                 # Task specifications, starter files, tests, rubrics
+│   └── tasks.yaml                 # Task specifications, starter files, tests, rubrics
 ├── fixtures/                      # Pre-recorded realistic agent outputs
 │   ├── baseline/
 │   ├── candidate_v2/
-│   ├── candidate_regressive/
+│   └── candidate_regressive/
 └── tests/                         # Unit test suite for the evaluation tool
     ├── test_engine.py
     ├── test_verdict.py
     ├── test_metrics.py
-    ├── test_cli.py
+    └── test_cli.py
 ```
 
 ---
@@ -301,4 +303,4 @@ If the pull request regresses test pass rates or bloats token cost without quali
 | **2. Evidenced Report** | Multi-dimensional positive/negative impact evidence | [reports/eval_report_positive.html](reports/eval_report_positive.html) & [reports/eval_report_negative.html](reports/eval_report_negative.html) |
 | **3. evaluate Command** | Command line tool with reporting & CI gates | `python evaluate.py evaluate` / `agent-eval` |
 | **4. One-Page Document** | Hard limit 1 page: concepts, 5 hardest decisions, cuts, trust failure case | [docs/ONE_PAGE_REFLECTION.md](docs/ONE_PAGE_REFLECTION.md) |
-| **5. Process & Transcript** | Prompts, manual audit checkpoints, bugs caught & session transcript | [docs/PROCESS.md](docs/PROCESS.md), [AGENTS.md](AGENTS.md), and [.agents/skills/](.agents/skills/harness-evaluation/SKILL.md) |```text
+| **5. Process & Transcript** | Prompts, manual audit checkpoints, bugs caught & session transcript | [docs/PROCESS.md](docs/PROCESS.md), [AGENTS.md](AGENTS.md), and [.agents/skills/](.agents/skills/harness-evaluation/SKILL.md) |
