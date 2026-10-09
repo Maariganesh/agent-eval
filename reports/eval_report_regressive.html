@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Harness Evaluation: Candidate Regressive (v1.5-bloat)</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        h1 { font-size: 1.75rem; font-weight: 700; color: #fff; }
+        .meta { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+        
+        .verdict-banner {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-left: 6px solid;
+        }
+        .verdict-banner.badge-positive { border-left-color: var(--success); }
+        .verdict-banner.badge-negative { border-left-color: var(--danger); }
+        .verdict-banner.badge-inconclusive { border-left-color: var(--warning); }
+
+        .verdict-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .verdict-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+        }
+        .badge-positive .verdict-badge { background: var(--success); color: #fff; }
+        .badge-negative .verdict-badge { background: var(--danger); color: #fff; }
+        .badge-inconclusive .verdict-badge { background: var(--warning); color: #000; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+        .stat-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; margin: 0.25rem 0; }
+        .stat-sub { font-size: 0.85rem; color: var(--text-muted); }
+
+        .positive { color: var(--success); font-weight: 600; }
+        .negative { color: var(--danger); font-weight: 600; }
+        .neutral { color: var(--text-muted); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border);
+        }
+        th, td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th { background: #182234; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        tr:hover td { background: var(--surface-hover); }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #dc2626; }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
+        .badge-neutral { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #64748b; }
+
+        .section-title { font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary); }
+        
+        .task-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .task-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .task-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            background: #151e2e;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .metric-box .label { display: block; font-size: 0.75rem; color: var(--text-muted); }
+        .metric-box .val { font-size: 0.95rem; font-weight: 600; }
+
+        .evidence-section h4 { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .evidence-section ul { padding-left: 1.25rem; font-size: 0.9rem; }
+        .evidence-section li { margin-bottom: 0.25rem; }
+
+        .recs-box {
+            background: #1e1b4b;
+            border: 1px solid #4338ca;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .recs-box h3 { color: #a5b4fc; margin-bottom: 0.75rem; }
+        .recs-box ul { padding-left: 1.5rem; }
+        .recs-box li { margin-bottom: 0.4rem; }
+        code { background: #0b1120; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Agent Harness Evaluation Report</h1>
+                <div class="meta">Comparing <strong>Baseline Harness (v1.0)</strong> &rarr; <strong>Candidate Regressive (v1.5-bloat)</strong> | Evaluated at 2026-10-09 12:06:33</div>
+            </div>
+        </header>
+
+        <div class="verdict-banner badge-negative">
+            <div class="verdict-title">
+                <span class="verdict-badge">NEGATIVE</span>
+                <span>NEGATIVE IMPACT: Harness 'Candidate Regressive (v1.5-bloat)' introduces regressions and should NOT be deployed.</span>
+            </div>
+            <ul style="margin-top: 0.75rem; padding-left: 1.5rem; font-size: 0.95rem;">
+                <li>GUARDRAIL VIOLATED: Candidate regressed functional correctness on 3 task(s): 'Sliding Window Rate Limiter' (-50%), 'Idempotent Payment Retry Workflow' (-50%), 'Cursor-based API Pagination Engine' (-40%)</li><li>Average test pass rate dropped by -35.0%</li><li>Team convention compliance declined by -16.6%</li><li>Business specification fulfillment dropped by -25.0%</li><li>Significant token overhead: candidate consumes +372.3% more tokens (18,130 additional tokens)</li>
+            </ul>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Net Quality Impact</div>
+                <div class="stat-value negative">-27.4 pts</div>
+                <div class="stat-sub">Across 4 benchmark tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Functional Tests</div>
+                <div class="stat-value negative">-35.0%</div>
+                <div class="stat-sub">51.2% &rarr; 16.3% pass rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Team Conventions</div>
+                <div class="stat-value negative">-16.6%</div>
+                <div class="stat-sub">37.5% &rarr; 20.9% compliance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Token & Cost Variance</div>
+                <div class="stat-value neutral">+372.3%</div>
+                <div class="stat-sub">$0.0214 &rarr; $0.0950 total</div>
+            </div>
+        </div>
+
+        <div class="recs-box">
+            <h3>Recommendations for Harness Maintainer</h3>
+            <ul><li>Do NOT roll out this harness change to engineering teams.</li><li>Investigate broken test cases in regressed tasks before iterating on prompt/rules.</li><li>Prune redundant instructions to reduce token waste.</li></ul>
+        </div>
+
+        <h2 class="section-title">Comparative Task Matrix</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task ID</th>
+                    <th>Status</th>
+                    <th>Functional &Delta;</th>
+                    <th>Convention &Delta;</th>
+                    <th>Spec &Delta;</th>
+                    <th>Tokens &Delta;</th>
+                    <th>Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td style="font-weight: 600;"><code>task_01_rate_limiter</code></td>
+            <td><span class="badge badge-danger">REGRESSED</span></td>
+            <td class="negative">-50.0%</td>
+            <td class="negative">-16.6%</td>
+            <td class="neutral">+0.0%</td>
+            <td>+4,430</td>
+            <td style="font-size: 0.9rem; color: var(--text-muted);">Regressed: Critical metrics degraded</td>
+        </tr>
+        
+        <tr>
+            <td style="font-weight: 600;"><code>task_02_payment_retry</code></td>
+            <td><span class="badge badge-danger">REGRESSED</span></td>
+            <td class="negative">-50.0%</td>
+            <td class="negative">-33.3%</td>
+            <td class="negative">-66.7%</td>
+            <td>+4,600</td>
+            <td style="font-size: 0.9rem; color: var(--text-muted);">Regressed: Critical metrics degraded</td>
+        </tr>
+        
+        <tr>
+            <td style="font-weight: 600;"><code>task_03_sql_injection</code></td>
+            <td><span class="badge badge-warning">MIXED</span></td>
+            <td class="neutral">+0.0%</td>
+            <td class="neutral">+0.0%</td>
+            <td class="neutral">+0.0%</td>
+            <td>+4,320</td>
+            <td style="font-size: 0.9rem; color: var(--text-muted);">Mixed: Quality unchanged but token efficiency altered</td>
+        </tr>
+        
+        <tr>
+            <td style="font-weight: 600;"><code>task_04_api_pagination</code></td>
+            <td><span class="badge badge-danger">REGRESSED</span></td>
+            <td class="negative">-40.0%</td>
+            <td class="negative">-16.6%</td>
+            <td class="negative">-33.4%</td>
+            <td>+4,780</td>
+            <td style="font-size: 0.9rem; color: var(--text-muted);">Regressed: Critical metrics degraded</td>
+        </tr>
+        
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Task Drilldown & Evidence</h2>
+        
+        <div class="task-card">
+            <div class="task-card-header">
+                <h3><code>task_01_rate_limiter</code>: Sliding Window Rate Limiter</h3>
+                <span class="badge badge-danger">REGRESSED</span>
+            </div>
+            <div class="task-card-grid">
+                <div class="metric-box">
+                    <span class="label">Tests (Pass/Total)</span>
+                    <span class="val">Base: 3/4 &rarr; Cand: 1/4</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Convention Compliance</span>
+                    <span class="val">Base: 33% &rarr; Cand: 17%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Spec Fulfillment</span>
+                    <span class="val">Base: 33% &rarr; Cand: 33%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Tokens & Cost</span>
+                    <span class="val">1,170 &rarr; 5,600 ($0.0245)</span>
+                </div>
+            </div>
+            <div class="evidence-section">
+                <h4>Observed Deltas:</h4>
+                <ul><li>CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 3/4 to 1/4 (-50.0%)</li><li>Convention regression: violations increased by 2 (-16.6%)</li><li>Token overhead increased by 4,430 tokens (+378.6%)</li></ul>
+                <h4>Candidate Violations:</h4>
+                <ul><li><code>[rate_limiter.py:3] Function '__init__' parameter 'window_seconds' lacks type annotation</code></li><li><code>[rate_limiter.py:3] Function '__init__' parameter 'max_requests' lacks type annotation</code></li><li><code>[rate_limiter.py:8] Function 'is_allowed' parameter 'key' lacks type annotation</code></li><li><code>[rate_limiter.py:8] Function 'is_allowed' lacks return type annotation</code></li><li><code>[rate_limiter.py:19] Function 'get_remaining' parameter 'key' lacks type annotation</code></li><li><code>[rate_limiter.py:19] Function 'get_remaining' lacks return type annotation</code></li><li><code>[rate_limiter.py:15] Bare 'except:' clause is forbidden by team conventions</code></li><li><code>[rate_limiter.py:15] Silently swallowed exception ('except ...: pass') is forbidden</code></li><li><code>[rate_limiter.py:2] Missing docstring for public entity 'SlidingWindowRateLimiter'</code></li><li><code>[rate_limiter.py:3] Missing docstring for public entity '__init__'</code></li><li><code>[rate_limiter.py:8] Missing docstring for public entity 'is_allowed'</code></li><li><code>[rate_limiter.py:19] Missing docstring for public entity 'get_remaining'</code></li></ul>
+            </div>
+        </div>
+        
+        <div class="task-card">
+            <div class="task-card-header">
+                <h3><code>task_02_payment_retry</code>: Idempotent Payment Retry Workflow</h3>
+                <span class="badge badge-danger">REGRESSED</span>
+            </div>
+            <div class="task-card-grid">
+                <div class="metric-box">
+                    <span class="label">Tests (Pass/Total)</span>
+                    <span class="val">Base: 2/4 &rarr; Cand: 0/1</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Convention Compliance</span>
+                    <span class="val">Base: 33% &rarr; Cand: 0%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Spec Fulfillment</span>
+                    <span class="val">Base: 100% &rarr; Cand: 33%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Tokens & Cost</span>
+                    <span class="val">1,200 &rarr; 5,800 ($0.0235)</span>
+                </div>
+            </div>
+            <div class="evidence-section">
+                <h4>Observed Deltas:</h4>
+                <ul><li>CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 2/4 to 0/1 (-50.0%)</li><li>Convention regression: violations increased by -1 (-33.3%)</li><li>Spec fulfillment dropped (-66.7%)</li><li>Token overhead increased by 4,600 tokens (+383.3%)</li></ul>
+                <h4>Candidate Violations:</h4>
+                <ul><li><code>[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'client_fn' lacks type annotation</code></li><li><code>[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'idempotency_key' lacks type annotation</code></li><li><code>[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'max_retries' lacks type annotation</code></li><li><code>[payment_retry.py:2] Function 'execute_payment_with_retry' lacks return type annotation</code></li><li><code>[payment_retry.py:7] Bare 'except:' clause is forbidden by team conventions</code></li><li><code>[payment_retry.py:7] Silently swallowed exception ('except ...: pass') is forbidden</code></li><li><code>[payment_retry.py:2] Missing docstring for public entity 'execute_payment_with_retry'</code></li><li><code>[payment_retry.py:5] Use of 'print()' detected; team convention requires 'logging'</code></li><li><code>[payment_retry.py] Required class inheriting from 'PaymentError' not found</code></li></ul>
+            </div>
+        </div>
+        
+        <div class="task-card">
+            <div class="task-card-header">
+                <h3><code>task_03_sql_injection</code>: SQL Query Builder Sanitization</h3>
+                <span class="badge badge-warning">MIXED</span>
+            </div>
+            <div class="task-card-grid">
+                <div class="metric-box">
+                    <span class="label">Tests (Pass/Total)</span>
+                    <span class="val">Base: 0/5 &rarr; Cand: 0/5</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Convention Compliance</span>
+                    <span class="val">Base: 50% &rarr; Cand: 50%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Spec Fulfillment</span>
+                    <span class="val">Base: 33% &rarr; Cand: 33%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Tokens & Cost</span>
+                    <span class="val">1,180 &rarr; 5,500 ($0.0220)</span>
+                </div>
+            </div>
+            <div class="evidence-section">
+                <h4>Observed Deltas:</h4>
+                <ul><li>Token overhead increased by 4,320 tokens (+366.1%)</li></ul>
+                <h4>Candidate Violations:</h4>
+                <ul><li><code>[query_builder.py:3] Function '__init__' parameter 'table' lacks type annotation</code></li><li><code>[query_builder.py:7] Function 'select' lacks return type annotation</code></li><li><code>[query_builder.py:10] Function 'where' parameter 'field' lacks type annotation</code></li><li><code>[query_builder.py:10] Function 'where' parameter 'op' lacks type annotation</code></li><li><code>[query_builder.py:10] Function 'where' parameter 'value' lacks type annotation</code></li><li><code>[query_builder.py:10] Function 'where' lacks return type annotation</code></li><li><code>[query_builder.py:14] Function 'build' lacks return type annotation</code></li><li><code>[query_builder.py:2] Missing docstring for public entity 'QueryBuilder'</code></li><li><code>[query_builder.py:3] Missing docstring for public entity '__init__'</code></li><li><code>[query_builder.py:7] Missing docstring for public entity 'select'</code></li><li><code>[query_builder.py:10] Missing docstring for public entity 'where'</code></li><li><code>[query_builder.py:14] Missing docstring for public entity 'build'</code></li></ul>
+            </div>
+        </div>
+        
+        <div class="task-card">
+            <div class="task-card-header">
+                <h3><code>task_04_api_pagination</code>: Cursor-based API Pagination Engine</h3>
+                <span class="badge badge-danger">REGRESSED</span>
+            </div>
+            <div class="task-card-grid">
+                <div class="metric-box">
+                    <span class="label">Tests (Pass/Total)</span>
+                    <span class="val">Base: 4/5 &rarr; Cand: 2/5</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Convention Compliance</span>
+                    <span class="val">Base: 33% &rarr; Cand: 17%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Spec Fulfillment</span>
+                    <span class="val">Base: 67% &rarr; Cand: 33%</span>
+                </div>
+                <div class="metric-box">
+                    <span class="label">Tokens & Cost</span>
+                    <span class="val">1,320 &rarr; 6,100 ($0.0250)</span>
+                </div>
+            </div>
+            <div class="evidence-section">
+                <h4>Observed Deltas:</h4>
+                <ul><li>CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 4/5 to 2/5 (-40.0%)</li><li>Convention regression: violations increased by 1 (-16.6%)</li><li>Spec fulfillment dropped (-33.4%)</li><li>Token overhead increased by 4,780 tokens (+362.1%)</li></ul>
+                <h4>Candidate Violations:</h4>
+                <ul><li><code>[pagination.py:3] Function 'encode_cursor' parameter 'item_id' lacks type annotation</code></li><li><code>[pagination.py:3] Function 'encode_cursor' parameter 'timestamp' lacks type annotation</code></li><li><code>[pagination.py:3] Function 'encode_cursor' lacks return type annotation</code></li><li><code>[pagination.py:6] Function 'decode_cursor' parameter 'cursor' lacks type annotation</code></li><li><code>[pagination.py:6] Function 'decode_cursor' lacks return type annotation</code></li><li><code>[pagination.py:13] Function 'paginate' parameter 'items' lacks type annotation</code></li><li><code>[pagination.py:13] Function 'paginate' parameter 'limit' lacks type annotation</code></li><li><code>[pagination.py:13] Function 'paginate' parameter 'cursor' lacks type annotation</code></li><li><code>[pagination.py:13] Function 'paginate' lacks return type annotation</code></li><li><code>[pagination.py:10] Bare 'except:' clause is forbidden by team conventions</code></li><li><code>[pagination.py:2] Missing docstring for public entity 'CursorPagination'</code></li><li><code>[pagination.py:3] Missing docstring for public entity 'encode_cursor'</code></li><li><code>[pagination.py:6] Missing docstring for public entity 'decode_cursor'</code></li><li><code>[pagination.py:13] Missing docstring for public entity 'paginate'</code></li></ul>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+name: "Candidate Regressive (v1.5-bloat)"
+description: "Over-engineered harness with conflicting guidelines, prompt bloat, and anti-patterns."
+model: "gpt-4o"
+temperature: 0.2

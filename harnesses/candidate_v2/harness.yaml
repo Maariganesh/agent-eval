@@ -1,0 +1,4 @@
+name: "Candidate Harness (v2.0)"
+description: "Production team harness with strict type safety, domain exception hierarchies, SQL injection protection, and defensive concurrency skills."
+model: "gpt-4o"
+temperature: 0.2

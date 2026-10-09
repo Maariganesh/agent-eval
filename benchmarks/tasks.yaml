@@ -1,0 +1,376 @@
+tasks:
+  - id: "task_01_rate_limiter"
+    title: "Sliding Window Rate Limiter"
+    category: "concurrency_and_performance"
+    description: >
+      Implement a production-grade SlidingWindowRateLimiter class with in-memory storage.
+      Requirements:
+      - Class SlidingWindowRateLimiter(window_seconds: float, max_requests: int)
+      - Method is_allowed(key: str) -> bool: returns True if request is allowed, False if exceeded.
+      - Method get_remaining(key: str) -> int: returns remaining quota in current window.
+      - Thread-safe using threading.Lock.
+      - Must purge expired timestamps properly to avoid memory leaks.
+      - Must validate that window_seconds > 0 and max_requests > 0, raising ValueError otherwise.
+      - Complete type annotations and docstrings.
+    expected_files:
+      - "rate_limiter.py"
+    conventions:
+      - name: "strict_typing"
+        type: "ast"
+      - name: "proper_exceptions"
+        type: "ast"
+    rubric:
+      - id: "has_thread_safety"
+        description: "Uses threading.Lock for concurrency protection"
+        weight: 1.0
+        type: "regex"
+        rule_spec:
+          pattern: "threading\\.Lock\\(\\)|self\\._lock"
+      - id: "validates_constructor_args"
+        description: "Validates constructor arguments window_seconds and max_requests"
+        weight: 1.0
+        type: "defensive_check"
+        rule_spec:
+          exception: "ValueError"
+      - id: "sliding_window_method"
+        description: "Implements is_allowed and get_remaining methods"
+        weight: 1.0
+        type: "ast_class_method"
+        rule_spec:
+          class_name: "SlidingWindowRateLimiter"
+          method_name: "is_allowed"
+    starter_code:
+      "rate_limiter.py": |
+        # Initial skeleton
+        class SlidingWindowRateLimiter:
+            def __init__(self, window_seconds, max_requests):
+                self.window_seconds = window_seconds
+                self.max_requests = max_requests
+
+            def is_allowed(self, key):
+                pass
+
+            def get_remaining(self, key):
+                pass
+    test_suite_code:
+      "test_rate_limiter.py": |
+        import time
+        import pytest
+        from rate_limiter import SlidingWindowRateLimiter
+
+        def test_rate_limiter_allows_under_quota():
+            limiter = SlidingWindowRateLimiter(window_seconds=1.0, max_requests=3)
+            assert limiter.is_allowed("user_1") is True
+            assert limiter.is_allowed("user_1") is True
+            assert limiter.is_allowed("user_1") is True
+            assert limiter.is_allowed("user_1") is False
+
+        def test_rate_limiter_remaining_count():
+            limiter = SlidingWindowRateLimiter(window_seconds=2.0, max_requests=5)
+            assert limiter.get_remaining("user_2") == 5
+            limiter.is_allowed("user_2")
+            assert limiter.get_remaining("user_2") == 4
+            limiter.is_allowed("user_2")
+            assert limiter.get_remaining("user_2") == 3
+
+        def test_rate_limiter_invalid_inputs():
+            with pytest.raises(ValueError):
+                SlidingWindowRateLimiter(window_seconds=-1.0, max_requests=5)
+            with pytest.raises(ValueError):
+                SlidingWindowRateLimiter(window_seconds=1.0, max_requests=0)
+
+        def test_rate_limiter_window_expiry():
+            limiter = SlidingWindowRateLimiter(window_seconds=0.2, max_requests=2)
+            assert limiter.is_allowed("u") is True
+            assert limiter.is_allowed("u") is True
+            assert limiter.is_allowed("u") is False
+            time.sleep(0.25)
+            assert limiter.is_allowed("u") is True
+
+  - id: "task_02_payment_retry"
+    title: "Idempotent Payment Retry Workflow"
+    category: "distributed_systems"
+    description: >
+      Implement an idempotent payment processing workflow with intelligent retry handling.
+      Requirements:
+      - Custom domain exceptions:
+        - PaymentError(Exception) as base
+        - TransientPaymentError(PaymentError): retryable (e.g. 503, network timeout)
+        - FatalPaymentError(PaymentError): non-retryable (e.g. invalid card, 400 bad request)
+      - Function execute_payment_with_retry(client_fn, idempotency_key: str, max_retries: int = 3, backoff_factor: float = 0.05) -> dict
+      - Must only retry on TransientPaymentError.
+      - Must NOT retry on FatalPaymentError; immediately raise.
+      - Must fail with PaymentError if max_retries is exceeded.
+      - Must use logging instead of print.
+      - Full type annotations.
+    expected_files:
+      - "payment_retry.py"
+    conventions:
+      - name: "no_bare_prints"
+        type: "ast"
+      - name: "custom_exception_hierarchy"
+        type: "required_subclass"
+        base_class: "PaymentError"
+    rubric:
+      - id: "defines_transient_error"
+        description: "Defines TransientPaymentError inheriting from PaymentError"
+        weight: 1.0
+        type: "regex"
+        rule_spec:
+          pattern: "class\\s+TransientPaymentError\\s*\\(\\s*PaymentError\\s*\\)"
+      - id: "defines_fatal_error"
+        description: "Defines FatalPaymentError inheriting from PaymentError"
+        weight: 1.0
+        type: "regex"
+        rule_spec:
+          pattern: "class\\s+FatalPaymentError\\s*\\(\\s*PaymentError\\s*\\)"
+      - id: "has_execute_function"
+        description: "Implements execute_payment_with_retry function"
+        weight: 1.0
+        type: "ast_function"
+        rule_spec:
+          function_name: "execute_payment_with_retry"
+    starter_code:
+      "payment_retry.py": |
+        # Initial skeleton
+        def execute_payment_with_retry(client_fn, idempotency_key, max_retries=3):
+            pass
+    test_suite_code:
+      "test_payment_retry.py": |
+        import pytest
+        from payment_retry import (
+            PaymentError,
+            TransientPaymentError,
+            FatalPaymentError,
+            execute_payment_with_retry,
+        )
+
+        def test_payment_succeeds_first_attempt():
+            call_count = 0
+            def mock_client(key):
+                nonlocal call_count
+                call_count += 1
+                return {"status": "success", "tx_id": "tx_123"}
+
+            res = execute_payment_with_retry(mock_client, "idemp_abc")
+            assert res["status"] == "success"
+            assert call_count == 1
+
+        def test_payment_retries_transient_error_and_succeeds():
+            call_count = 0
+            def mock_client(key):
+                nonlocal call_count
+                call_count += 1
+                if call_count < 3:
+                    raise TransientPaymentError("Gateway timeout")
+                return {"status": "success", "tx_id": "tx_456"}
+
+            res = execute_payment_with_retry(mock_client, "idemp_retry", max_retries=3, backoff_factor=0.01)
+            assert res["status"] == "success"
+            assert call_count == 3
+
+        def test_payment_fatal_error_does_not_retry():
+            call_count = 0
+            def mock_client(key):
+                nonlocal call_count
+                call_count += 1
+                raise FatalPaymentError("Insufficient funds")
+
+            with pytest.raises(FatalPaymentError):
+                execute_payment_with_retry(mock_client, "idemp_fatal", max_retries=3, backoff_factor=0.01)
+            assert call_count == 1
+
+        def test_payment_exhausts_retries():
+            call_count = 0
+            def mock_client(key):
+                nonlocal call_count
+                call_count += 1
+                raise TransientPaymentError("Down for maintenance")
+
+            with pytest.raises(PaymentError):
+                execute_payment_with_retry(mock_client, "idemp_fail", max_retries=2, backoff_factor=0.01)
+            assert call_count == 3
+
+  - id: "task_03_sql_injection"
+    title: "SQL Query Builder Sanitization"
+    category: "security_and_database"
+    description: >
+      Refactor and implement a secure QueryBuilder class that produces parameterized queries.
+      Requirements:
+      - Class QueryBuilder(table: str)
+      - Methods:
+        - select(*columns: str) -> 'QueryBuilder'
+        - where(field: str, op: str, value: Any) -> 'QueryBuilder'
+        - build() -> Tuple[str, tuple]: returns parameterized SQL (using ? placeholders) and tuple of params.
+      - NEVER format values directly into the SQL string.
+      - Must validate that field names only contain alphanumeric chars and underscores (prevent identifier injection).
+      - Must validate that op is in allowed operators (=, !=, >, <, >=, <=, LIKE, IN).
+      - Raise ValueError on invalid table name, field name, or operator.
+    expected_files:
+      - "query_builder.py"
+    conventions:
+      - name: "no_sql_formatting"
+        type: "no_sql_formatting"
+      - name: "strict_typing"
+        type: "ast"
+    rubric:
+      - id: "uses_question_mark_placeholders"
+        description: "Uses parameterized ? placeholders in SQL output"
+        weight: 1.0
+        type: "regex"
+        rule_spec:
+          pattern: "WHERE.*\\?"
+      - id: "validates_operators"
+        description: "Validates SQL comparison operators defensively"
+        weight: 1.0
+        type: "defensive_check"
+        rule_spec:
+          exception: "ValueError"
+      - id: "build_method_returns_tuple"
+        description: "build() method implemented in QueryBuilder"
+        weight: 1.0
+        type: "ast_class_method"
+        rule_spec:
+          class_name: "QueryBuilder"
+          method_name: "build"
+    starter_code:
+      "query_builder.py": |
+        # Initial skeleton
+        class QueryBuilder:
+            def __init__(self, table):
+                self.table = table
+            def select(self, *columns):
+                pass
+            def where(self, field, op, value):
+                pass
+            def build(self):
+                pass
+    test_suite_code:
+      "test_query_builder.py": |
+        import pytest
+        from query_builder import QueryBuilder
+
+        def test_basic_select_and_where():
+            qb = QueryBuilder("users").select("id", "username").where("status", "=", "active")
+            sql, params = qb.build()
+            assert sql.strip() == "SELECT id, username FROM users WHERE status = ?"
+            assert params == ("active",)
+
+        def test_multiple_where_clauses():
+            qb = QueryBuilder("orders").select("id", "total").where("status", "=", "pending").where("total", ">", 100)
+            sql, params = qb.build()
+            assert sql.strip() == "SELECT id, total FROM orders WHERE status = ? AND total > ?"
+            assert params == ("pending", 100)
+
+        def test_rejects_sql_injection_in_operator():
+            with pytest.raises(ValueError):
+                QueryBuilder("users").where("id", "= 1; DROP TABLE users; --", "x")
+
+        def test_rejects_sql_injection_in_field():
+            with pytest.raises(ValueError):
+                QueryBuilder("users").where("id; DROP TABLE users; --", "=", "x")
+
+        def test_parameterization_safety():
+            malicious_input = "' OR '1'='1"
+            qb = QueryBuilder("users").select("*").where("username", "=", malicious_input)
+            sql, params = qb.build()
+            assert malicious_input not in sql
+            assert params == (malicious_input,)
+
+  - id: "task_04_api_pagination"
+    title: "Cursor-based API Pagination Engine"
+    category: "api_design"
+    description: >
+      Implement an API cursor pagination engine.
+      Requirements:
+      - Class CursorPagination
+      - Method encode_cursor(item_id: str, timestamp: float) -> str: returns URL-safe base64 encoded cursor.
+      - Method decode_cursor(cursor: str) -> Tuple[str, float]: decodes cursor back to (item_id, timestamp).
+      - Method paginate(items: list, limit: int, cursor: str | None = None) -> dict:
+        - items are dicts with 'id' and 'timestamp' keys.
+        - Returns dict with keys:
+          'items': list of page items,
+          'has_next_page': bool,
+          'next_cursor': str | None,
+          'total_count': int
+      - Raises ValueError if limit <= 0 or limit > 100.
+      - Raises ValueError if cursor is malformed or invalid base64.
+      - Proper type annotations and docstrings.
+    expected_files:
+      - "pagination.py"
+    conventions:
+      - name: "strict_typing"
+        type: "ast"
+      - name: "proper_exceptions"
+        type: "ast"
+    rubric:
+      - id: "uses_urlsafe_base64"
+        description: "Uses base64 urlsafe encoding for cursor safety"
+        weight: 1.0
+        type: "regex"
+        rule_spec:
+          pattern: "urlsafe_b64encode|urlsafe_b64decode|b64encode"
+      - id: "validates_limit"
+        description: "Defensively validates pagination limit range"
+        weight: 1.0
+        type: "defensive_check"
+        rule_spec:
+          exception: "ValueError"
+      - id: "cursor_methods"
+        description: "Implements paginate and decode_cursor methods"
+        weight: 1.0
+        type: "ast_class_method"
+        rule_spec:
+          class_name: "CursorPagination"
+          method_name: "paginate"
+    starter_code:
+      "pagination.py": |
+        # Initial skeleton
+        class CursorPagination:
+            def encode_cursor(self, item_id, timestamp):
+                pass
+            def decode_cursor(self, cursor):
+                pass
+            def paginate(self, items, limit, cursor=None):
+                pass
+    test_suite_code:
+      "test_pagination.py": |
+        import pytest
+        from pagination import CursorPagination
+
+        def test_encode_decode_roundtrip():
+            p = CursorPagination()
+            cursor = p.encode_cursor("item_999", 1712000000.5)
+            assert isinstance(cursor, str)
+            item_id, ts = p.decode_cursor(cursor)
+            assert item_id == "item_999"
+            assert pytest.approx(ts, 0.001) == 1712000000.5
+
+        def test_decode_invalid_cursor_raises():
+            p = CursorPagination()
+            with pytest.raises(ValueError):
+                p.decode_cursor("invalid-base64-string!@#$")
+
+        def test_paginate_first_page():
+            p = CursorPagination()
+            items = [{"id": f"item_{i}", "timestamp": 1000.0 + i} for i in range(10)]
+            page = p.paginate(items, limit=4)
+            assert len(page["items"]) == 4
+            assert page["has_next_page"] is True
+            assert page["next_cursor"] is not None
+            assert page["total_count"] == 10
+
+        def test_paginate_last_page():
+            p = CursorPagination()
+            items = [{"id": f"item_{i}", "timestamp": 1000.0 + i} for i in range(5)]
+            page = p.paginate(items, limit=10)
+            assert len(page["items"]) == 5
+            assert page["has_next_page"] is False
+            assert page["next_cursor"] is None
+
+        def test_invalid_limit_raises():
+            p = CursorPagination()
+            with pytest.raises(ValueError):
+                p.paginate([], limit=0)
+            with pytest.raises(ValueError):
+                p.paginate([], limit=101)

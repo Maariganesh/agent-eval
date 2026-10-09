@@ -1,0 +1,628 @@
+{
+  "timestamp": "2026-10-09 12:08:37",
+  "baseline_name": "Baseline Harness (v1.0)",
+  "candidate_name": "Candidate Regressive (v1.5-bloat)",
+  "total_tasks": 4,
+  "baseline_avg_functional": 0.512,
+  "baseline_avg_convention": 0.375,
+  "baseline_avg_fulfillment": 0.583,
+  "baseline_total_cost_usd": 0.0214,
+  "baseline_total_tokens": 4870,
+  "candidate_avg_functional": 0.163,
+  "candidate_avg_convention": 0.209,
+  "candidate_avg_fulfillment": 0.333,
+  "candidate_total_cost_usd": 0.095,
+  "candidate_total_tokens": 23000,
+  "net_functional_delta": -0.35,
+  "net_convention_delta": -0.166,
+  "net_fulfillment_delta": -0.25,
+  "net_quality_delta": -27.4,
+  "net_cost_pct_change": 372.3,
+  "improved_tasks": 0,
+  "regressed_tasks": 3,
+  "unchanged_tasks": 1,
+  "verdict": "NEGATIVE",
+  "verdict_summary": "NEGATIVE IMPACT: Harness 'Candidate Regressive (v1.5-bloat)' introduces regressions and should NOT be deployed.",
+  "verdict_reasons": [
+    "GUARDRAIL VIOLATED: Candidate regressed functional correctness on 3 task(s): 'Sliding Window Rate Limiter' (-50%), 'Idempotent Payment Retry Workflow' (-50%), 'Cursor-based API Pagination Engine' (-40%)",
+    "Average test pass rate dropped by -35.0%",
+    "Team convention compliance declined by -16.6%",
+    "Business specification fulfillment dropped by -25.0%",
+    "Significant token overhead: candidate consumes +372.3% more tokens (18,130 additional tokens)"
+  ],
+  "recommendations": [
+    "Do NOT roll out this harness change to engineering teams.",
+    "Investigate broken test cases in regressed tasks before iterating on prompt/rules.",
+    "Prune redundant instructions to reduce token waste."
+  ],
+  "task_comparisons": [
+    {
+      "task_id": "task_01_rate_limiter",
+      "task_title": "Sliding Window Rate Limiter",
+      "status": "REGRESSED",
+      "baseline": {
+        "task_id": "task_01_rate_limiter",
+        "task_title": "Sliding Window Rate Limiter",
+        "harness_name": "Baseline Harness (v1.0)",
+        "success": false,
+        "functional_score": 0.75,
+        "tests_passed": 3,
+        "tests_total": 4,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_suza8x4p\nplugins: anyio-4.14.2\ncollecting ... collected 4 items\n\ntest_rate_limiter.py::test_rate_limiter_allows_under_quota PASSED        [ 25%]\ntest_rate_limiter.py::test_rate_limiter_remaining_count PASSED           [ 50%]\ntest_rate_limiter.py::test_rate_limiter_invalid_inputs FAILED            [ 75%]\ntest_rate_limiter.py::test_rate_limiter_window_expiry PASSED             [100%]\n\n================================== FAILURES ===================================\n______________________ test_rate_limiter_invalid_inputs _______________________\ntest_rate_limiter.py:21: in test_rate_limiter_invalid_inputs\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=========================== short test summary info ===========================\nFAILED test_rate_limiter.py::test_rate_limiter_invalid_inputs - Failed: DID N...\n========================= 1 failed, 3 passed in 0.36s =========================",
+        "convention_score": 0.333,
+        "convention_violations": [
+          "[rate_limiter.py:4] Function '__init__' parameter 'window_seconds' lacks type annotation",
+          "[rate_limiter.py:4] Function '__init__' parameter 'max_requests' lacks type annotation",
+          "[rate_limiter.py:10] Function 'is_allowed' parameter 'key' lacks type annotation",
+          "[rate_limiter.py:10] Function 'is_allowed' lacks return type annotation",
+          "[rate_limiter.py:24] Function 'get_remaining' parameter 'key' lacks type annotation",
+          "[rate_limiter.py:24] Function 'get_remaining' lacks return type annotation",
+          "[rate_limiter.py:3] Missing docstring for public entity 'SlidingWindowRateLimiter'",
+          "[rate_limiter.py:4] Missing docstring for public entity '__init__'",
+          "[rate_limiter.py:10] Missing docstring for public entity 'is_allowed'",
+          "[rate_limiter.py:24] Missing docstring for public entity 'get_remaining'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 2,
+          "violation_count": 10
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "has_thread_safety",
+            "description": "Uses threading.Lock for concurrency protection",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses threading.Lock for concurrency protection"
+          },
+          {
+            "criterion_id": "validates_constructor_args",
+            "description": "Validates constructor arguments window_seconds and max_requests",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing defensive check raising ValueError"
+          },
+          {
+            "criterion_id": "sliding_window_method",
+            "description": "Implements is_allowed and get_remaining methods",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'SlidingWindowRateLimiter' implements method 'is_allowed'"
+          }
+        ],
+        "input_tokens": 850,
+        "output_tokens": 320,
+        "total_tokens": 1170,
+        "estimated_cost_usd": 0.005325,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "rate_limiter.py": "import time\n\nclass SlidingWindowRateLimiter:\n    def __init__(self, window_seconds, max_requests):\n        # Naive implementation without argument validation\n        self.window_seconds = window_seconds\n        self.max_requests = max_requests\n        self.requests = {}\n\n    def is_allowed(self, key):\n        now = time.time()\n        if key not in self.requests:\n            self.requests[key] = []\n        \n        # filter timestamps\n        cutoff = now - self.window_seconds\n        self.requests[key] = [t for t in self.requests[key] if t > cutoff]\n        \n        if len(self.requests[key]) < self.max_requests:\n            self.requests[key].append(now)\n            return True\n        return False\n\n    def get_remaining(self, key):\n        now = time.time()\n        if key not in self.requests:\n            return self.max_requests\n        cutoff = now - self.window_seconds\n        valid = [t for t in self.requests[key] if t > cutoff]\n        return max(0, self.max_requests - len(valid))\n"
+        },
+        "error_message": null
+      },
+      "candidate": {
+        "task_id": "task_01_rate_limiter",
+        "task_title": "Sliding Window Rate Limiter",
+        "harness_name": "Candidate Regressive (v1.5-bloat)",
+        "success": false,
+        "functional_score": 0.25,
+        "tests_passed": 1,
+        "tests_total": 4,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_9xrbbqyf\nplugins: anyio-4.14.2\ncollecting ... collected 4 items\n\ntest_rate_limiter.py::test_rate_limiter_allows_under_quota PASSED        [ 25%]\ntest_rate_limiter.py::test_rate_limiter_remaining_count FAILED           [ 50%]\ntest_rate_limiter.py::test_rate_limiter_invalid_inputs FAILED            [ 75%]\ntest_rate_limiter.py::test_rate_limiter_window_expiry FAILED             [100%]\n\n================================== FAILURES ===================================\n______________________ test_rate_limiter_remaining_count ______________________\ntest_rate_limiter.py:16: in test_rate_limiter_remaining_count\n    assert limiter.get_remaining(\"user_2\") == 4\nE   AssertionError: assert 5 == 4\nE    +  where 5 = get_remaining('user_2')\nE    +    where get_remaining = <rate_limiter.SlidingWindowRateLimiter object at 0x000002BA70160CD0>.get_remaining\n______________________ test_rate_limiter_invalid_inputs _______________________\ntest_rate_limiter.py:21: in test_rate_limiter_invalid_inputs\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_______________________ test_rate_limiter_window_expiry _______________________\ntest_rate_limiter.py:32: in test_rate_limiter_window_expiry\n    assert limiter.is_allowed(\"u\") is True\nE   AssertionError: assert False is True\nE    +  where False = is_allowed('u')\nE    +    where is_allowed = <rate_limiter.SlidingWindowRateLimiter object at 0x000002BA701135C0>.is_allowed\n=========================== short test summary info ===========================\nFAILED test_rate_limiter.py::test_rate_limiter_remaining_count - AssertionErr...\nFAILED test_rate_limiter.py::test_rate_limiter_invalid_inputs - Failed: DID N...\nFAILED test_rate_limiter.py::test_rate_limiter_window_expiry - AssertionError...\n========================= 3 failed, 1 passed in 0.37s =========================",
+        "convention_score": 0.167,
+        "convention_violations": [
+          "[rate_limiter.py:3] Function '__init__' parameter 'window_seconds' lacks type annotation",
+          "[rate_limiter.py:3] Function '__init__' parameter 'max_requests' lacks type annotation",
+          "[rate_limiter.py:8] Function 'is_allowed' parameter 'key' lacks type annotation",
+          "[rate_limiter.py:8] Function 'is_allowed' lacks return type annotation",
+          "[rate_limiter.py:19] Function 'get_remaining' parameter 'key' lacks type annotation",
+          "[rate_limiter.py:19] Function 'get_remaining' lacks return type annotation",
+          "[rate_limiter.py:15] Bare 'except:' clause is forbidden by team conventions",
+          "[rate_limiter.py:15] Silently swallowed exception ('except ...: pass') is forbidden",
+          "[rate_limiter.py:2] Missing docstring for public entity 'SlidingWindowRateLimiter'",
+          "[rate_limiter.py:3] Missing docstring for public entity '__init__'",
+          "[rate_limiter.py:8] Missing docstring for public entity 'is_allowed'",
+          "[rate_limiter.py:19] Missing docstring for public entity 'get_remaining'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 1,
+          "violation_count": 12
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "has_thread_safety",
+            "description": "Uses threading.Lock for concurrency protection",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses threading.Lock for concurrency protection"
+          },
+          {
+            "criterion_id": "validates_constructor_args",
+            "description": "Validates constructor arguments window_seconds and max_requests",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing defensive check raising ValueError"
+          },
+          {
+            "criterion_id": "sliding_window_method",
+            "description": "Implements is_allowed and get_remaining methods",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'SlidingWindowRateLimiter' implements method 'is_allowed'"
+          }
+        ],
+        "input_tokens": 4200,
+        "output_tokens": 1400,
+        "total_tokens": 5600,
+        "estimated_cost_usd": 0.0245,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "rate_limiter.py": "# Over-engineered regressive code with syntax/exception anti-patterns\nclass SlidingWindowRateLimiter:\n    def __init__(self, window_seconds, max_requests):\n        self.window_seconds = window_seconds\n        self.max_requests = max_requests\n        self.history = []\n\n    def is_allowed(self, key):\n        # Swallows exceptions silently (anti-pattern)\n        try:\n            if len(self.history) >= self.max_requests:\n                return False\n            self.history.append(key)\n            return True\n        except:\n            pass\n        return True\n\n    def get_remaining(self, key):\n        # Broken logic that doesn't respect window expiry\n        return self.max_requests\n"
+        },
+        "error_message": null
+      },
+      "delta_functional": -0.5,
+      "delta_convention": -0.166,
+      "delta_fulfillment": 0.0,
+      "delta_total_tokens": 4430,
+      "delta_cost_usd": 0.019175,
+      "change_summary": "Regressed: Critical metrics degraded",
+      "evidence_notes": [
+        "CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 3/4 to 1/4 (-50.0%)",
+        "Convention regression: violations increased by 2 (-16.6%)",
+        "Token overhead increased by 4,430 tokens (+378.6%)"
+      ]
+    },
+    {
+      "task_id": "task_02_payment_retry",
+      "task_title": "Idempotent Payment Retry Workflow",
+      "status": "REGRESSED",
+      "baseline": {
+        "task_id": "task_02_payment_retry",
+        "task_title": "Idempotent Payment Retry Workflow",
+        "harness_name": "Baseline Harness (v1.0)",
+        "success": false,
+        "functional_score": 0.5,
+        "tests_passed": 2,
+        "tests_total": 4,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_90xnyqxq\nplugins: anyio-4.14.2\ncollecting ... collected 4 items\n\ntest_payment_retry.py::test_payment_succeeds_first_attempt PASSED        [ 25%]\ntest_payment_retry.py::test_payment_retries_transient_error_and_succeeds PASSED [ 50%]\ntest_payment_retry.py::test_payment_fatal_error_does_not_retry FAILED    [ 75%]\ntest_payment_retry.py::test_payment_exhausts_retries FAILED              [100%]\n\n================================== FAILURES ===================================\n___________________ test_payment_fatal_error_does_not_retry ___________________\ntest_payment_retry.py:38: in mock_client\n    raise FatalPaymentError(\"Insufficient funds\")\nE   payment_retry.FatalPaymentError: Insufficient funds\n\nDuring handling of the above exception, another exception occurred:\ntest_payment_retry.py:41: in test_payment_fatal_error_does_not_retry\n    execute_payment_with_retry(mock_client, \"idemp_fatal\", max_retries=3, backoff_factor=0.01)\npayment_retry.py:22: in execute_payment_with_retry\n    raise PaymentError(f\"Payment failed after {max_retries} attempts: {e}\")\nE   payment_retry.PaymentError: Payment failed after 3 attempts: Insufficient funds\n---------------------------- Captured stdout call -----------------------------\nAttempting payment for idemp_fatal...\nAttempting payment for idemp_fatal...\nAttempting payment for idemp_fatal...\n________________________ test_payment_exhausts_retries ________________________\ntest_payment_retry.py:53: in test_payment_exhausts_retries\n    assert call_count == 3\nE   assert 2 == 3\n---------------------------- Captured stdout call -----------------------------\nAttempting payment for idemp_fail...\nAttempting payment for idemp_fail...\n=========================== short test summary info ===========================\nFAILED test_payment_retry.py::test_payment_fatal_error_does_not_retry - payme...\nFAILED test_payment_retry.py::test_payment_exhausts_retries - assert 2 == 3\n========================= 2 failed, 2 passed in 0.16s =========================",
+        "convention_score": 0.333,
+        "convention_violations": [
+          "[payment_retry.py:12] Function 'execute_payment_with_retry' parameter 'client_fn' lacks type annotation",
+          "[payment_retry.py:12] Function 'execute_payment_with_retry' parameter 'idempotency_key' lacks type annotation",
+          "[payment_retry.py:12] Function 'execute_payment_with_retry' parameter 'max_retries' lacks type annotation",
+          "[payment_retry.py:12] Function 'execute_payment_with_retry' parameter 'backoff_factor' lacks type annotation",
+          "[payment_retry.py:12] Function 'execute_payment_with_retry' lacks return type annotation",
+          "[payment_retry.py:3] Missing docstring for public entity 'PaymentError'",
+          "[payment_retry.py:6] Missing docstring for public entity 'TransientPaymentError'",
+          "[payment_retry.py:9] Missing docstring for public entity 'FatalPaymentError'",
+          "[payment_retry.py:12] Missing docstring for public entity 'execute_payment_with_retry'",
+          "[payment_retry.py:17] Use of 'print()' detected; team convention requires 'logging'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 2,
+          "violation_count": 10
+        },
+        "fulfillment_score": 1.0,
+        "rubric_scores": [
+          {
+            "criterion_id": "defines_transient_error",
+            "description": "Defines TransientPaymentError inheriting from PaymentError",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Found pattern match for 'class\\s+TransientPaymentError\\s*\\(\\s*PaymentError\\s*\\)'"
+          },
+          {
+            "criterion_id": "defines_fatal_error",
+            "description": "Defines FatalPaymentError inheriting from PaymentError",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Found pattern match for 'class\\s+FatalPaymentError\\s*\\(\\s*PaymentError\\s*\\)'"
+          },
+          {
+            "criterion_id": "has_execute_function",
+            "description": "Implements execute_payment_with_retry function",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Function 'execute_payment_with_retry' is implemented"
+          }
+        ],
+        "input_tokens": 920,
+        "output_tokens": 280,
+        "total_tokens": 1200,
+        "estimated_cost_usd": 0.0051,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "payment_retry.py": "import time\n\nclass PaymentError(Exception):\n    pass\n\nclass TransientPaymentError(PaymentError):\n    pass\n\nclass FatalPaymentError(PaymentError):\n    pass\n\ndef execute_payment_with_retry(client_fn, idempotency_key, max_retries=3, backoff_factor=0.05):\n    # Baseline naive retry: catches all exceptions without respecting fatal error hierarchy\n    attempt = 0\n    while attempt < max_retries:\n        try:\n            print(f\"Attempting payment for {idempotency_key}...\")\n            return client_fn(idempotency_key)\n        except Exception as e:\n            attempt += 1\n            if attempt >= max_retries:\n                raise PaymentError(f\"Payment failed after {max_retries} attempts: {e}\")\n            time.sleep(backoff_factor)\n    raise PaymentError(\"Retries exhausted\")\n"
+        },
+        "error_message": null
+      },
+      "candidate": {
+        "task_id": "task_02_payment_retry",
+        "task_title": "Idempotent Payment Retry Workflow",
+        "harness_name": "Candidate Regressive (v1.5-bloat)",
+        "success": false,
+        "functional_score": 0.0,
+        "tests_passed": 0,
+        "tests_total": 1,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_n3z7nkrp\nplugins: anyio-4.14.2\ncollecting ... collected 0 items / 1 error\n\n=================================== ERRORS ====================================\n___________________ ERROR collecting test_payment_retry.py ____________________\nImportError while importing test module 'C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_n3z7nkrp\\test_payment_retry.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n..\\..\\Python\\pythoncore-3.14-64\\Lib\\importlib\\__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntest_payment_retry.py:2: in <module>\n    from payment_retry import (\nE   ImportError: cannot import name 'PaymentError' from 'payment_retry' (C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_n3z7nkrp\\payment_retry.py)\n=========================== short test summary info ===========================\nERROR test_payment_retry.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n============================== 1 error in 0.27s ===============================",
+        "convention_score": 0.0,
+        "convention_violations": [
+          "[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'client_fn' lacks type annotation",
+          "[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'idempotency_key' lacks type annotation",
+          "[payment_retry.py:2] Function 'execute_payment_with_retry' parameter 'max_retries' lacks type annotation",
+          "[payment_retry.py:2] Function 'execute_payment_with_retry' lacks return type annotation",
+          "[payment_retry.py:7] Bare 'except:' clause is forbidden by team conventions",
+          "[payment_retry.py:7] Silently swallowed exception ('except ...: pass') is forbidden",
+          "[payment_retry.py:2] Missing docstring for public entity 'execute_payment_with_retry'",
+          "[payment_retry.py:5] Use of 'print()' detected; team convention requires 'logging'",
+          "[payment_retry.py] Required class inheriting from 'PaymentError' not found"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 0,
+          "violation_count": 9
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "defines_transient_error",
+            "description": "Defines TransientPaymentError inheriting from PaymentError",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Defines TransientPaymentError inheriting from PaymentError"
+          },
+          {
+            "criterion_id": "defines_fatal_error",
+            "description": "Defines FatalPaymentError inheriting from PaymentError",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Defines FatalPaymentError inheriting from PaymentError"
+          },
+          {
+            "criterion_id": "has_execute_function",
+            "description": "Implements execute_payment_with_retry function",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Function 'execute_payment_with_retry' is implemented"
+          }
+        ],
+        "input_tokens": 4600,
+        "output_tokens": 1200,
+        "total_tokens": 5800,
+        "estimated_cost_usd": 0.0235,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "payment_retry.py": "# Regressive code: missing custom exceptions, uses bare except, swallows fatal errors\ndef execute_payment_with_retry(client_fn, idempotency_key, max_retries=3):\n    for i in range(max_retries):\n        try:\n            print(\"Processing payment...\")\n            return client_fn(idempotency_key)\n        except:\n            pass\n    return None\n"
+        },
+        "error_message": null
+      },
+      "delta_functional": -0.5,
+      "delta_convention": -0.333,
+      "delta_fulfillment": -0.667,
+      "delta_total_tokens": 4600,
+      "delta_cost_usd": 0.0184,
+      "change_summary": "Regressed: Critical metrics degraded",
+      "evidence_notes": [
+        "CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 2/4 to 0/1 (-50.0%)",
+        "Convention regression: violations increased by -1 (-33.3%)",
+        "Spec fulfillment dropped (-66.7%)",
+        "Token overhead increased by 4,600 tokens (+383.3%)"
+      ]
+    },
+    {
+      "task_id": "task_03_sql_injection",
+      "task_title": "SQL Query Builder Sanitization",
+      "status": "MIXED",
+      "baseline": {
+        "task_id": "task_03_sql_injection",
+        "task_title": "SQL Query Builder Sanitization",
+        "harness_name": "Baseline Harness (v1.0)",
+        "success": false,
+        "functional_score": 0.0,
+        "tests_passed": 0,
+        "tests_total": 5,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test__hx9gtfl\nplugins: anyio-4.14.2\ncollecting ... collected 5 items\n\ntest_query_builder.py::test_basic_select_and_where FAILED                [ 20%]\ntest_query_builder.py::test_multiple_where_clauses FAILED                [ 40%]\ntest_query_builder.py::test_rejects_sql_injection_in_operator FAILED     [ 60%]\ntest_query_builder.py::test_rejects_sql_injection_in_field FAILED        [ 80%]\ntest_query_builder.py::test_parameterization_safety FAILED               [100%]\n\n================================== FAILURES ===================================\n_________________________ test_basic_select_and_where _________________________\ntest_query_builder.py:7: in test_basic_select_and_where\n    assert sql.strip() == \"SELECT id, username FROM users WHERE status = ?\"\nE   assert \"SELECT id, u...us = 'active'\" == 'SELECT id, u...RE status = ?'\nE     \nE     - SELECT id, username FROM users WHERE status = ?\nE     ?                                               ^\nE     + SELECT id, username FROM users WHERE status = 'active'\nE     ?                                               ^^^^^^^^\n_________________________ test_multiple_where_clauses _________________________\ntest_query_builder.py:13: in test_multiple_where_clauses\n    assert sql.strip() == \"SELECT id, total FROM orders WHERE status = ? AND total > ?\"\nE   assert \"SELECT id, t...total > '100'\" == 'SELECT id, t...AND total > ?'\nE     \nE     - SELECT id, total FROM orders WHERE status = ? AND total > ?\nE     ?                                             ^             ^\nE     + SELECT id, total FROM orders WHERE status = 'pending' AND total > '100'\nE     ?                                             ^^^^^^^^^             ^^^^^\n___________________ test_rejects_sql_injection_in_operator ____________________\ntest_query_builder.py:17: in test_rejects_sql_injection_in_operator\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_____________________ test_rejects_sql_injection_in_field _____________________\ntest_query_builder.py:21: in test_rejects_sql_injection_in_field\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_parameterization_safety _________________________\ntest_query_builder.py:28: in test_parameterization_safety\n    assert malicious_input not in sql\nE   assert \"' OR '1'='1\" not in \"SELECT * FR...' OR '1'='1'\"\nE     \nE     \"' OR '1'='1\" is contained here:\nE       SELECT * FROM users WHERE username = '' OR '1'='1'\nE     ?                                        +++++++++++\n=========================== short test summary info ===========================\nFAILED test_query_builder.py::test_basic_select_and_where - assert \"SELECT id...\nFAILED test_query_builder.py::test_multiple_where_clauses - assert \"SELECT id...\nFAILED test_query_builder.py::test_rejects_sql_injection_in_operator - Failed...\nFAILED test_query_builder.py::test_rejects_sql_injection_in_field - Failed: D...\nFAILED test_query_builder.py::test_parameterization_safety - assert \"' OR '1'...\n============================== 5 failed in 0.12s ==============================",
+        "convention_score": 0.5,
+        "convention_violations": [
+          "[query_builder.py:2] Function '__init__' parameter 'table' lacks type annotation",
+          "[query_builder.py:7] Function 'select' lacks return type annotation",
+          "[query_builder.py:12] Function 'where' parameter 'field' lacks type annotation",
+          "[query_builder.py:12] Function 'where' parameter 'op' lacks type annotation",
+          "[query_builder.py:12] Function 'where' parameter 'value' lacks type annotation",
+          "[query_builder.py:12] Function 'where' lacks return type annotation",
+          "[query_builder.py:17] Function 'build' lacks return type annotation",
+          "[query_builder.py:1] Missing docstring for public entity 'QueryBuilder'",
+          "[query_builder.py:2] Missing docstring for public entity '__init__'",
+          "[query_builder.py:7] Missing docstring for public entity 'select'",
+          "[query_builder.py:12] Missing docstring for public entity 'where'",
+          "[query_builder.py:17] Missing docstring for public entity 'build'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 3,
+          "violation_count": 12
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "uses_question_mark_placeholders",
+            "description": "Uses parameterized ? placeholders in SQL output",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses parameterized ? placeholders in SQL output"
+          },
+          {
+            "criterion_id": "validates_operators",
+            "description": "Validates SQL comparison operators defensively",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing defensive check raising ValueError"
+          },
+          {
+            "criterion_id": "build_method_returns_tuple",
+            "description": "build() method implemented in QueryBuilder",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'QueryBuilder' implements method 'build'"
+          }
+        ],
+        "input_tokens": 890,
+        "output_tokens": 290,
+        "total_tokens": 1180,
+        "estimated_cost_usd": 0.005125,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "query_builder.py": "class QueryBuilder:\n    def __init__(self, table):\n        self.table = table\n        self.columns = [\"*\"]\n        self.clauses = []\n\n    def select(self, *columns):\n        if columns:\n            self.columns = list(columns)\n        return self\n\n    def where(self, field, op, value):\n        # Insecure direct formatting - vulnerable to SQL injection\n        self.clauses.append(f\"{field} {op} '{value}'\")\n        return self\n\n    def build(self):\n        col_str = \", \".join(self.columns)\n        where_str = \" AND \".join(self.clauses)\n        if where_str:\n            sql = f\"SELECT {col_str} FROM {self.table} WHERE {where_str}\"\n        else:\n            sql = f\"SELECT {col_str} FROM {self.table}\"\n        return sql, ()\n"
+        },
+        "error_message": null
+      },
+      "candidate": {
+        "task_id": "task_03_sql_injection",
+        "task_title": "SQL Query Builder Sanitization",
+        "harness_name": "Candidate Regressive (v1.5-bloat)",
+        "success": false,
+        "functional_score": 0.0,
+        "tests_passed": 0,
+        "tests_total": 5,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_tsxqipu9\nplugins: anyio-4.14.2\ncollecting ... collected 5 items\n\ntest_query_builder.py::test_basic_select_and_where FAILED                [ 20%]\ntest_query_builder.py::test_multiple_where_clauses FAILED                [ 40%]\ntest_query_builder.py::test_rejects_sql_injection_in_operator FAILED     [ 60%]\ntest_query_builder.py::test_rejects_sql_injection_in_field FAILED        [ 80%]\ntest_query_builder.py::test_parameterization_safety FAILED               [100%]\n\n================================== FAILURES ===================================\n_________________________ test_basic_select_and_where _________________________\ntest_query_builder.py:7: in test_basic_select_and_where\n    assert sql.strip() == \"SELECT id, username FROM users WHERE status = ?\"\nE   assert \"SELECT * FRO...us = 'active'\" == 'SELECT id, u...RE status = ?'\nE     \nE     - SELECT id, username FROM users WHERE status = ?\nE     ?        ^^^^^^^^^^^^                           ^\nE     + SELECT * FROM users WHERE status = 'active'\nE     ?        ^                           ^^^^^^^^\n_________________________ test_multiple_where_clauses _________________________\ntest_query_builder.py:13: in test_multiple_where_clauses\n    assert sql.strip() == \"SELECT id, total FROM orders WHERE status = ? AND total > ?\"\nE   assert \"SELECT * FRO...total > '100'\" == 'SELECT id, t...AND total > ?'\nE     \nE     - SELECT id, total FROM orders WHERE status = ? AND total > ?\nE     + SELECT * FROM orders WHERE total > '100'\n___________________ test_rejects_sql_injection_in_operator ____________________\ntest_query_builder.py:17: in test_rejects_sql_injection_in_operator\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n_____________________ test_rejects_sql_injection_in_field _____________________\ntest_query_builder.py:21: in test_rejects_sql_injection_in_field\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n________________________ test_parameterization_safety _________________________\ntest_query_builder.py:28: in test_parameterization_safety\n    assert malicious_input not in sql\nE   assert \"' OR '1'='1\" not in \"SELECT * FR...' OR '1'='1'\"\nE     \nE     \"' OR '1'='1\" is contained here:\nE       SELECT * FROM users WHERE username = '' OR '1'='1'\nE     ?                                        +++++++++++\n=========================== short test summary info ===========================\nFAILED test_query_builder.py::test_basic_select_and_where - assert \"SELECT * ...\nFAILED test_query_builder.py::test_multiple_where_clauses - assert \"SELECT * ...\nFAILED test_query_builder.py::test_rejects_sql_injection_in_operator - Failed...\nFAILED test_query_builder.py::test_rejects_sql_injection_in_field - Failed: D...\nFAILED test_query_builder.py::test_parameterization_safety - assert \"' OR '1'...\n============================== 5 failed in 0.13s ==============================",
+        "convention_score": 0.5,
+        "convention_violations": [
+          "[query_builder.py:3] Function '__init__' parameter 'table' lacks type annotation",
+          "[query_builder.py:7] Function 'select' lacks return type annotation",
+          "[query_builder.py:10] Function 'where' parameter 'field' lacks type annotation",
+          "[query_builder.py:10] Function 'where' parameter 'op' lacks type annotation",
+          "[query_builder.py:10] Function 'where' parameter 'value' lacks type annotation",
+          "[query_builder.py:10] Function 'where' lacks return type annotation",
+          "[query_builder.py:14] Function 'build' lacks return type annotation",
+          "[query_builder.py:2] Missing docstring for public entity 'QueryBuilder'",
+          "[query_builder.py:3] Missing docstring for public entity '__init__'",
+          "[query_builder.py:7] Missing docstring for public entity 'select'",
+          "[query_builder.py:10] Missing docstring for public entity 'where'",
+          "[query_builder.py:14] Missing docstring for public entity 'build'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 3,
+          "violation_count": 12
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "uses_question_mark_placeholders",
+            "description": "Uses parameterized ? placeholders in SQL output",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses parameterized ? placeholders in SQL output"
+          },
+          {
+            "criterion_id": "validates_operators",
+            "description": "Validates SQL comparison operators defensively",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing defensive check raising ValueError"
+          },
+          {
+            "criterion_id": "build_method_returns_tuple",
+            "description": "build() method implemented in QueryBuilder",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'QueryBuilder' implements method 'build'"
+          }
+        ],
+        "input_tokens": 4400,
+        "output_tokens": 1100,
+        "total_tokens": 5500,
+        "estimated_cost_usd": 0.022,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "query_builder.py": "# Regressive query builder with vulnerable string concatenation\nclass QueryBuilder:\n    def __init__(self, table):\n        self.table = table\n        self.where_str = \"\"\n\n    def select(self, *columns):\n        return self\n\n    def where(self, field, op, value):\n        self.where_str = f\"{field} {op} '{value}'\"\n        return self\n\n    def build(self):\n        sql = f\"SELECT * FROM {self.table} WHERE {self.where_str}\"\n        return sql, ()\n"
+        },
+        "error_message": null
+      },
+      "delta_functional": 0.0,
+      "delta_convention": 0.0,
+      "delta_fulfillment": 0.0,
+      "delta_total_tokens": 4320,
+      "delta_cost_usd": 0.016875,
+      "change_summary": "Mixed: Quality unchanged but token efficiency altered",
+      "evidence_notes": [
+        "Token overhead increased by 4,320 tokens (+366.1%)"
+      ]
+    },
+    {
+      "task_id": "task_04_api_pagination",
+      "task_title": "Cursor-based API Pagination Engine",
+      "status": "REGRESSED",
+      "baseline": {
+        "task_id": "task_04_api_pagination",
+        "task_title": "Cursor-based API Pagination Engine",
+        "harness_name": "Baseline Harness (v1.0)",
+        "success": false,
+        "functional_score": 0.8,
+        "tests_passed": 4,
+        "tests_total": 5,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_w33kp9us\nplugins: anyio-4.14.2\ncollecting ... collected 5 items\n\ntest_pagination.py::test_encode_decode_roundtrip PASSED                  [ 20%]\ntest_pagination.py::test_decode_invalid_cursor_raises PASSED             [ 40%]\ntest_pagination.py::test_paginate_first_page PASSED                      [ 60%]\ntest_pagination.py::test_paginate_last_page PASSED                       [ 80%]\ntest_pagination.py::test_invalid_limit_raises FAILED                     [100%]\n\n================================== FAILURES ===================================\n__________________________ test_invalid_limit_raises __________________________\ntest_pagination.py:36: in test_invalid_limit_raises\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=========================== short test summary info ===========================\nFAILED test_pagination.py::test_invalid_limit_raises - Failed: DID NOT RAISE ...\n========================= 1 failed, 4 passed in 0.11s =========================",
+        "convention_score": 0.333,
+        "convention_violations": [
+          "[pagination.py:2] Function 'encode_cursor' parameter 'item_id' lacks type annotation",
+          "[pagination.py:2] Function 'encode_cursor' parameter 'timestamp' lacks type annotation",
+          "[pagination.py:2] Function 'encode_cursor' lacks return type annotation",
+          "[pagination.py:6] Function 'decode_cursor' parameter 'cursor' lacks type annotation",
+          "[pagination.py:6] Function 'decode_cursor' lacks return type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'items' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'limit' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'cursor' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' lacks return type annotation",
+          "[pagination.py:1] Missing docstring for public entity 'CursorPagination'",
+          "[pagination.py:2] Missing docstring for public entity 'encode_cursor'",
+          "[pagination.py:6] Missing docstring for public entity 'decode_cursor'",
+          "[pagination.py:13] Missing docstring for public entity 'paginate'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 2,
+          "violation_count": 13
+        },
+        "fulfillment_score": 0.667,
+        "rubric_scores": [
+          {
+            "criterion_id": "uses_urlsafe_base64",
+            "description": "Uses base64 urlsafe encoding for cursor safety",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses base64 urlsafe encoding for cursor safety"
+          },
+          {
+            "criterion_id": "validates_limit",
+            "description": "Defensively validates pagination limit range",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Defensive check raises ValueError on invalid input"
+          },
+          {
+            "criterion_id": "cursor_methods",
+            "description": "Implements paginate and decode_cursor methods",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'CursorPagination' implements method 'paginate'"
+          }
+        ],
+        "input_tokens": 980,
+        "output_tokens": 340,
+        "total_tokens": 1320,
+        "estimated_cost_usd": 0.00585,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "pagination.py": "class CursorPagination:\n    def encode_cursor(self, item_id, timestamp):\n        # Naive colon string representation without base64 encoding\n        return f\"{item_id}:{timestamp}\"\n\n    def decode_cursor(self, cursor):\n        try:\n            parts = cursor.split(\":\")\n            return parts[0], float(parts[1])\n        except Exception:\n            raise ValueError(\"Invalid cursor\")\n\n    def paginate(self, items, limit, cursor=None):\n        # Missing limit range validation (allows limit <= 0 or > 100)\n        start_idx = 0\n        if cursor:\n            item_id, ts = self.decode_cursor(cursor)\n            for i, itm in enumerate(items):\n                if itm[\"id\"] == item_id:\n                    start_idx = i + 1\n                    break\n\n        page_items = items[start_idx : start_idx + limit]\n        has_next = (start_idx + limit) < len(items)\n        next_c = self.encode_cursor(page_items[-1][\"id\"], page_items[-1][\"timestamp\"]) if (has_next and page_items) else None\n\n        return {\n            \"items\": page_items,\n            \"has_next_page\": has_next,\n            \"next_cursor\": next_c,\n            \"total_count\": len(items),\n        }\n"
+        },
+        "error_message": null
+      },
+      "candidate": {
+        "task_id": "task_04_api_pagination",
+        "task_title": "Cursor-based API Pagination Engine",
+        "harness_name": "Candidate Regressive (v1.5-bloat)",
+        "success": false,
+        "functional_score": 0.4,
+        "tests_passed": 2,
+        "tests_total": 5,
+        "test_output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\mitra\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\mitra\\AppData\\Local\\Temp\\agent_eval_test_76k00md1\nplugins: anyio-4.14.2\ncollecting ... collected 5 items\n\ntest_pagination.py::test_encode_decode_roundtrip PASSED                  [ 20%]\ntest_pagination.py::test_decode_invalid_cursor_raises FAILED             [ 40%]\ntest_pagination.py::test_paginate_first_page FAILED                      [ 60%]\ntest_pagination.py::test_paginate_last_page PASSED                       [ 80%]\ntest_pagination.py::test_invalid_limit_raises FAILED                     [100%]\n\n================================== FAILURES ===================================\n______________________ test_decode_invalid_cursor_raises ______________________\ntest_pagination.py:14: in test_decode_invalid_cursor_raises\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n__________________________ test_paginate_first_page ___________________________\ntest_pagination.py:21: in test_paginate_first_page\n    assert len(page[\"items\"]) == 4\nE   AssertionError: assert 10 == 4\nE    +  where 10 = len([{'id': 'item_0', 'timestamp': 1000.0}, {'id': 'item_1', 'timestamp': 1001.0}, {'id': 'item_2', 'timestamp': 1002.0}, {'id': 'item_3', 'timestamp': 1003.0}, {'id': 'item_4', 'timestamp': 1004.0}, {'id': 'item_5', 'timestamp': 1005.0}, ...])\n__________________________ test_invalid_limit_raises __________________________\ntest_pagination.py:36: in test_invalid_limit_raises\n    with pytest.raises(ValueError):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE ValueError\n=========================== short test summary info ===========================\nFAILED test_pagination.py::test_decode_invalid_cursor_raises - Failed: DID NO...\nFAILED test_pagination.py::test_paginate_first_page - AssertionError: assert ...\nFAILED test_pagination.py::test_invalid_limit_raises - Failed: DID NOT RAISE ...\n========================= 3 failed, 2 passed in 0.11s =========================",
+        "convention_score": 0.167,
+        "convention_violations": [
+          "[pagination.py:3] Function 'encode_cursor' parameter 'item_id' lacks type annotation",
+          "[pagination.py:3] Function 'encode_cursor' parameter 'timestamp' lacks type annotation",
+          "[pagination.py:3] Function 'encode_cursor' lacks return type annotation",
+          "[pagination.py:6] Function 'decode_cursor' parameter 'cursor' lacks type annotation",
+          "[pagination.py:6] Function 'decode_cursor' lacks return type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'items' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'limit' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' parameter 'cursor' lacks type annotation",
+          "[pagination.py:13] Function 'paginate' lacks return type annotation",
+          "[pagination.py:10] Bare 'except:' clause is forbidden by team conventions",
+          "[pagination.py:2] Missing docstring for public entity 'CursorPagination'",
+          "[pagination.py:3] Missing docstring for public entity 'encode_cursor'",
+          "[pagination.py:6] Missing docstring for public entity 'decode_cursor'",
+          "[pagination.py:13] Missing docstring for public entity 'paginate'"
+        ],
+        "convention_details": {
+          "checks_performed": 6,
+          "checks_passed": 1,
+          "violation_count": 14
+        },
+        "fulfillment_score": 0.333,
+        "rubric_scores": [
+          {
+            "criterion_id": "uses_urlsafe_base64",
+            "description": "Uses base64 urlsafe encoding for cursor safety",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing required pattern: Uses base64 urlsafe encoding for cursor safety"
+          },
+          {
+            "criterion_id": "validates_limit",
+            "description": "Defensively validates pagination limit range",
+            "passed": false,
+            "score": 0.0,
+            "weight": 1.0,
+            "details": "Missing defensive check raising ValueError"
+          },
+          {
+            "criterion_id": "cursor_methods",
+            "description": "Implements paginate and decode_cursor methods",
+            "passed": true,
+            "score": 1.0,
+            "weight": 1.0,
+            "details": "Class 'CursorPagination' implements method 'paginate'"
+          }
+        ],
+        "input_tokens": 4800,
+        "output_tokens": 1300,
+        "total_tokens": 6100,
+        "estimated_cost_usd": 0.025,
+        "duration_seconds": 0.15,
+        "generated_files": {
+          "pagination.py": "# Regressive pagination implementation\nclass CursorPagination:\n    def encode_cursor(self, item_id, timestamp):\n        return f\"{item_id}-{timestamp}\"\n\n    def decode_cursor(self, cursor):\n        try:\n            p = cursor.split(\"-\")\n            return p[0], float(p[1])\n        except:\n            return \"none\", 0.0\n\n    def paginate(self, items, limit, cursor=None):\n        return {\"items\": items, \"has_next_page\": False, \"next_cursor\": None, \"total_count\": len(items)}\n"
+        },
+        "error_message": null
+      },
+      "delta_functional": -0.4,
+      "delta_convention": -0.166,
+      "delta_fulfillment": -0.334,
+      "delta_total_tokens": 4780,
+      "delta_cost_usd": 0.01915,
+      "change_summary": "Regressed: Critical metrics degraded",
+      "evidence_notes": [
+        "CRITICAL FUNCTIONAL REGRESSION: tests passed dropped from 4/5 to 2/5 (-40.0%)",
+        "Convention regression: violations increased by 1 (-16.6%)",
+        "Spec fulfillment dropped (-33.4%)",
+        "Token overhead increased by 4,780 tokens (+362.1%)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+name: "Baseline Harness (v1.0)"
+description: "Default standard agent instructions without team architectural rules or defensive coding skills."
+model: "gpt-4o"
+temperature: 0.2

@@ -1,0 +1,2 @@
+[console_scripts]
+agent-eval = harness_eval.cli:main
